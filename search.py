@@ -33,6 +33,7 @@ def forward_selection(num_features):
 
     print(f"Finished Search!! The best feature subset is {best_set[0]} which has an accuracy of {format(best_set[1],'.3f')}%")
 
+#same as forward but start from all features and remove one feature at a time
 def backward_elimination(num_features):
     print('Beginning backward_elimination...\n')
 
