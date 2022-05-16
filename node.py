@@ -15,9 +15,9 @@ def forward_selection(num_features):
         for k in range(1,num_features+1):
             #check the intersection between feature and set of features
             if not k in set(features):
-                #possible feature selection
+                #stub evaluation funciton(random)
                 a=round(random.uniform(0,1),3)
-                #print(f'feature:{k} accuracy:{a}')
+                print(f'-Using feature(s): {sorted((*features,k))} accuracy is {a}%')
                 #continue searching the best feature selection
                 if a > best_accuracy:
                     best_accuracy = a
@@ -27,9 +27,9 @@ def forward_selection(num_features):
         #fin
         if best_accuracy > best_set[1]:
             best_set=(features,best_accuracy)
-        print(f"Using feature(s): {features}      accuracy is {format(best_accuracy,'.3f')}%")
+        print(f"feature(s): {features} was the best, accuracy is {format(best_accuracy,'.3f')}%\n")
 
-    print(f"\nfeature(s): {best_set[0]} was the best, accuracy is {format(best_set[1],'.3f')}")
+    print(f"Finished Search!! The best feature subset is {best_set[0]} which has an accuracy of {format(best_set[1],'.3f')}%")
 
 
 
