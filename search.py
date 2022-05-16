@@ -68,5 +68,5 @@ def backward_elimination(num_features):
         print(f"feature(s): {features} was the best, accuracy is {format(best_accuracy,'.3f')}%\n")
 
     print(f"Finished Search!! The best feature subset is {best_set[0]} which has an accuracy of {format(best_set[1],'.3f')}%")
-    print(features)    
+
 
