@@ -6,7 +6,7 @@ import re
 from operator import itemgetter
 
 #find the nearest neighbors validator (for all features)
-def NNValidator(file_name):
+def NNValidator(file_name,subset):
     distances = []
     #load data from file
     data= np.loadtxt(file_name,delimiter='\t',dtype=str)
@@ -16,17 +16,28 @@ def NNValidator(file_name):
     #Leave each data point out
     for k in range(total_datapoints):
         row = re.split(r'\s+',data[k][2:])
+        
         test_class = row[0]
         test_features = row[1:]
+        
+        #get the subset
+        test_feature_subset=[]
+        for val in subset:
+            test_feature_subset.append(test_features[val-1])
 
         for i in range(total_datapoints):
             neighbor = re.split(r'\s+',data[i][2:])
             neighbor_class = neighbor[0]
             neighbor_features = neighbor[1:]
 
+            #get the subset
+            neighbor_feature_subset=[]
+            for val in subset:
+                neighbor_feature_subset.append(neighbor_features[val-1])
+
             #calculate the distance between the points
             if i != k:
-                dist = np.linalg.norm(np.array(test_features,dtype=float)-np.array(neighbor_features,dtype=float))
+                dist = np.linalg.norm(np.array(test_feature_subset,dtype=float)-np.array(neighbor_feature_subset,dtype=float))
                 distances.append((dist, neighbor_class))
         distances = sorted(distances,key = itemgetter(0))
         
@@ -38,4 +49,4 @@ def NNValidator(file_name):
     print(f'Accuracy is: {correct/(total_datapoints-1)}')        
 
 file_name = 'small-test-dataset.txt'
-NNValidator(file_name)
+NNValidator(file_name,subset=(1,3,4))
