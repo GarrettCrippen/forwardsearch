@@ -4,6 +4,7 @@
 import numpy as np
 import re
 from operator import itemgetter
+from sklearn import preprocessing
 
 #REMEMBER: split and take subset
 class NN_Classifier():
@@ -41,30 +42,40 @@ class Validator:
         distances = []
         total_datapoints = len(data_raw)
         correct = 0
-        data=[]
+        features=[]
+        classes=[]
 
-        #get the subset of features and preserve the class
-        for instance in range(len(data_raw)):
-            #this is the class
-            vals = [re.split(r'\s+',data_raw[instance][2:])[0]]
+        for instance in range(total_datapoints):
+            classes.append(re.split(r'\s+',data_raw[instance][2:])[0])
+            features.append(re.split(r'\s+',data_raw[instance][2:])[1:])
+
+        #print(features[99])
+        #let's normalize all of the data
+        
+        features = preprocessing.normalize(features)
+        #print(features)
+        features_new = []
+        for instance in range(total_datapoints):
+            val_features = []
             for feature in subset:
-                #this is an individual feature
-                vals.append(re.split(r'\s+',data_raw[instance][2:])[feature])
-            data.append(vals)
-            
+                val_features.append(features[feature-1])
+            features_new.append(val_features)
+
+        features = np.array(features_new, dtype = float)
+
         #Leave each data point out
         for k in range(total_datapoints):
 
-            test_class = data[k][0]
-            test_features = data[k][1:]
+            test_class = classes[k]
+            test_features = features[k]
 
             for i in range(total_datapoints):
-                neighbor_class = data[i][0]
-                neighbor_features = data[i][1:]
+                neighbor_class = classes[i]
+                neighbor_features = features[i]
 
                 #calculate the distance between the points
                 if i != k:
-                    dist = np.linalg.norm(np.array(test_features,dtype=float)-np.array(neighbor_features,dtype=float))
+                    dist = np.linalg.norm(test_features-neighbor_features)
                     distances.append((dist, neighbor_class))
             distances = sorted(distances,key = itemgetter(0))
             
