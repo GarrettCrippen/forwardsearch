@@ -5,91 +5,123 @@ import numpy as np
 import re
 from operator import itemgetter
 from sklearn import preprocessing
-
-#REMEMBER: split and take subset
-class NN_Classifier():
+import time
+class Classifier():
+    
     def __init__(self):
         pass
 
-    #Store all classes + instances
-    def train(self,training_instances: list):
-        NN_Classifier.training_instances = training_instances
+    #load the whole dataset
+    def train(self,f,c):
+        Classifier.features = f
+        Classifier.classes = c
 
-    #Find the distances of a single instance to all other instances, then return class label of smallest distance
-    def test(self,test_instance: int):
-        test_instance-=1
+    #uses row at features[instance_num] as test_feature and all other features as training_features
+    def test(self,instance_num,subset):
+        start_time = time.time()
+        total_datapoints = len(self.features)
         distances = []
-        test_features = re.split(r'\s+',NN_Classifier.training_instances[test_instance][2:])[1:]
-        for neighbor in range(len(NN_Classifier.training_instances)):
 
-            neighbor_instance = re.split(r'\s+',NN_Classifier.training_instances[neighbor][2:])
-            neighbor_features = neighbor_instance[1:]
-            neighbor_class = neighbor_instance[0]
+        #go through every instance and just use feature subset
+        new_features =[]
+        for instance in range(total_datapoints):
+            features_subset = []
+            for feature in subset:
+                #only use the subsets ex. feature 1 is at index 0
+                features_subset.append(self.features[instance][feature-1])
+            new_features.append(features_subset)
+        new_features = np.array(new_features, dtype = float)
 
-            #don't find the distance to itself
-            if neighbor != test_instance:
-                dist = np.linalg.norm(np.array(test_features,dtype=float)-np.array(neighbor_features,dtype=float))
-                distances.append((dist, neighbor_class))
-        #return the class of the closest 
-        distances = sorted(distances,key = itemgetter(0))
-        print(f'predicted class for instance ({test_instance+1}) is: {distances[0][1]}') 
+        #compute distances of point to all of its neighbors
+        for i in range(total_datapoints):
+
+            #don't compute against itself
+            if i != instance_num:
+                #eucledian distance measure
+                dist=np.linalg.norm(new_features[instance_num]-new_features[i])
+                distances.append((dist, self.classes[i]))
+
+        #sort to find closest neighbor
+        distances = sorted(distances, key = itemgetter(0))
+        print(f'instance({instance_num+1}) ,\tpredicted: {distances[0][1]} ,\ttime elapsed = {time.time()-start_time}s')
+        return distances[0][1]
+
 
 #find the nearest neighbors accuracy for all instances(leave-one-out) given a subset of features)
-class Validator:
+class Validator():
     def __init__(self):
         pass
-    def NN(self,data_raw,subset):
-        distances = []
-        total_datapoints = len(data_raw)
-        correct = 0
-        features=[]
-        classes=[]
 
-        for instance in range(total_datapoints):
-            classes.append(re.split(r'\s+',data_raw[instance][2:])[0])
-            features.append(re.split(r'\s+',data_raw[instance][2:])[1:])
+    #NN: Compute the distances of an test_instance to all training_instances, and return the class of the closest training_instance
+    #Validator(Leave-One-Out): correct percentage of guesses of NN-Classifier
+    def validator(self,features,classes,subset):
+        start_time = time.time()
+        test= Classifier()
+        test.train(features,classes)
+        correct=0
 
-        #print(features[99])
-        #let's normalize all of the data
-        
-        features = preprocessing.normalize(features)
-        #print(features)
-        features_new = []
-        for instance in range(total_datapoints):
-            val_features = []
-            for feature in subset:
-                val_features.append(features[feature-1])
-            features_new.append(val_features)
-
-        features = np.array(features_new, dtype = float)
-
-        #Leave each data point out
-        for k in range(total_datapoints):
-
-            test_class = classes[k]
-            test_features = features[k]
-
-            for i in range(total_datapoints):
-                neighbor_class = classes[i]
-                neighbor_features = features[i]
-
-                #calculate the distance between the points
-                if i != k:
-                    dist = np.linalg.norm(test_features-neighbor_features)
-                    distances.append((dist, neighbor_class))
-            distances = sorted(distances,key = itemgetter(0))
-            
-            if distances[0][1] == test_class:
+        #RUN NN for every point as a test_instance and all others as training
+        for i in range(len(classes)):
+            if c[i] == test.test(i,subset):
                 correct+=1
+        accuracy = correct/len(classes)
+        print(f'accuracy is: {accuracy}% ,\ttime elapsed = {time.time()-start_time}s')
+        return accuracy
 
-        #sort the distances from the neighbors
-        print(f'Accuracy is: {correct/total_datapoints}')        
+    # def validator(self,features,classes,subset):
+    #     total_datapoints = len(features)
+    #     correct = 0
 
-file_name = 'small-test-dataset.txt'
-#NN(file_name,subset=(1,2,3,4,5,6,7,8,9,10))
+    #     #go through every instance
+    #     new_features =[]
+    #     for instance in range(total_datapoints):
+    #         features_subset = []
+    #         for feature in subset:
+    #             #only use the subsets ex. feature 1 is at index 0
+    #             features_subset.append(features[instance][feature-1])
+    #         new_features.append(features_subset)
+    #     features = np.array(new_features, dtype = float)
+            
+    #     #perform NN classifier for every point, where i is the test_feature
+    #     for i in range(total_datapoints):
+    #         test_features = features[i]
+    #         test_class = classes[i]
+    #         distances = []
+
+    #         #find the distance of instance i to instance k
+    #         for k in range(total_datapoints):
+    #             neighbor_features = features[k]
+    #             neighbor_class = classes[k]
+
+    #             #don't find distance to itself
+    #             if i!=k:
+    #                 #eucledian distance
+    #                 dist = np.linalg.norm(test_features - neighbor_features)
+    #                 distances.append((dist,neighbor_class))
+    #         distances = sorted(distances,key = itemgetter(0))
+
+    #         #validate results
+    #         if distances[0][1] == test_class:
+    #             correct+=1
+
+    #     accuracy = correct/total_datapoints
+    #     print(f'accuracy is: {accuracy}')
+    #     return accuracy
+
+
+
+f1 = 'small-test-dataset.txt'
+f2 = 'Large-test-dataset.txt'
+data=np.loadtxt(f1,delimiter='\t',dtype=str)
+f = []
+c= []
+for line in data:
+    line = re.split(r'\s+',line[2:])
+    f.append(line[1:])
+    c.append(line[0])
+
+f = preprocessing.normalize(np.array(f,dtype=float),axis=0)
+
+print('validating NN with feature subset {3,5,7} for small-test-dataset')
 v= Validator()
-v.NN(data_raw=np.loadtxt(file_name,delimiter='\t',dtype=str),subset=(3,5,7))
-
-# N = NN_Classifier()
-# N.train(np.loadtxt(file_name,delimiter='\t',dtype=str))
-# N.test(5)
+v.validator(f,c,(3,5,7))
