@@ -1,4 +1,7 @@
 import search
+
+#Used only in project 2 part 1
+
 search_alg=[search.forward_selection,search.backward_elimination]
 while(True):
     print('Enter total number of features: ',end='')
